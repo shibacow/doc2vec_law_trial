@@ -7,7 +7,7 @@ from gensim.models.doc2vec import TaggedDocument
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
-MODEL_PATH="doc2vec.model.laws"
+MODEL_PATH="doc2vec.model.laws2"
 model = models.Doc2Vec.load(MODEL_PATH)
 
 # 似た文章を探す

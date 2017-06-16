@@ -7,7 +7,7 @@ from gensim import models
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
-model = models.Doc2Vec.load('doc2vec.model.laws')
+model = models.Doc2Vec.load('model/doc2vec.model.laws3')
 
 # 似た文章を探す
 def search_similar_texts(law):
