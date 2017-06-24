@@ -7,7 +7,7 @@ from gensim.models.doc2vec import TaggedDocument
 import logging
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
-MODEL_PATH="doc2vec.model.laws2"
+MODEL_PATH="model/doc2vec.model.laws7"
 model = models.Doc2Vec.load(MODEL_PATH)
 
 # 似た文章を探す
@@ -22,8 +22,8 @@ def search_similar_words(words):
     for word in words:
         print()
         print(word + ':')
-        for result in model.most_similar(positive=word, topn=10):
-            print(result[0])
+        for result in model.most_similar(positive=word, topn=20):
+            print(result)
 
 def split_into_words(doc, name=''):
     mecab = MeCab.Tagger("-Ochasen")
@@ -38,8 +38,14 @@ def split_into_words(doc, name=''):
     return TaggedDocument(words=words, tags=[name])
 
 if __name__ == '__main__':
-    print('文字列入力:')
-    search_str = input()
-    words = split_into_words(search_str).words
-    search_similar_texts(words)
-    search_similar_words(words)
+    help(model.docvecs)
+    #for k in dir(model.docvecs):
+    #    print(k)
+    #for k in model.docvecs.o:
+    #    print(k)
+    #print(model.docvecs.trained_item)
+    #print('文字列入力:')
+    #search_str = input()
+    #words = split_into_words(search_str).words
+    #search_similar_texts(words)
+    #search_similar_words(words)

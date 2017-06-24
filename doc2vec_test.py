@@ -11,9 +11,9 @@ import re
 import logging
 from pyquery import PyQuery as pq
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-OUTPUT_MODEL = 'model/doc2vec.model.laws5'
+OUTPUT_MODEL = 'model/doc2vec.model.laws7'
 SAMPLING=500
-PASSING_PRECISION = int(0.99*SAMPLING)
+PASSING_PRECISION = int(0.90*SAMPLING)
 import random
 
 class MongoOp(object):
@@ -51,11 +51,11 @@ class OneLaw(object):
             if len(chunks) > 3 and chunks[3].startswith('名詞') and not chunks[3].startswith('名詞-数'):
                 words.append(chunks[0])
         logging.info("count={} name={} word={}".format(self.count,self.title,words[:20]))
-        return TaggedDocument(words=words, tags=[self.title])
+        return TaggedDocument(words=words, tags=[self.cat])
 
                     
 def train(sentences):
-    model = models.Doc2Vec(size=400, alpha=0.0015, sample=1e-4, min_count=200, workers=4)
+    model = models.Doc2Vec(size=400, alpha=0.0015, sample=1e-4, min_count=10, workers=4)
     model.build_vocab(sentences)
     for x in range(30):
         logging.info("x={}".format(x))
