@@ -73,31 +73,32 @@ def before_request():
     pipeline=[{"$sample":{"size":20}}]
     g.law_sample=mp.base.aggregate(pipeline)
     g.cats=cats
-    app.logger.info("g.laws_model={}".format(g.laws_dict))
-    app.logger.info("g.cat_model={}".format(g.cat_dict))
-    app.logger.info("g.mp={}".format(g.mp))
-    app.logger.info("g.cats={}".format(g.cats))
-    app.logger.info("g.law_sampling={}".format(g.law_sample))
+    #app.logger.info("g.laws_model={}".format(g.laws_dict))
+    #app.logger.info("g.cat_model={}".format(g.cat_dict))
+    #app.logger.info("g.mp={}".format(g.mp))
+    #app.logger.info("g.cats={}".format(g.cats))
+    #app.logger.info("g.law_sampling={}".format(g.law_sample))
     
+@app.route("/search/",methods=["GET","POST"])
 @app.route("/search",methods=["GET","POST"])
 def search():
     form=InputArea(request.form)
-    word=request.form['word']
-    words=split_into_words(word)
-    neg_word=request.form['neg_word']
-    neg_words=split_into_words(neg_word)
-    app.logger.info("word={} neg_words={}".format(words,neg_words))
     rdict={}
-    
-    for k,model in g.laws_dict.items():
-        try:
-            r=model.most_similar(positive=words, negative=neg_words,topn=20)
-            rdict[k]=r
-        except KeyError as err:
-            app.logger.error(err)
-            flash("word={} is not not in vocabulary".format(word))
-            return redirect(url_for('index',form=form,ridct=rdict))
-    return render_template('index.html',form=form,rdict=rdict)
+    if request.method=='POST':
+        word=request.form['word']
+        words=split_into_words(word)
+        neg_word=request.form['neg_word']
+        neg_words=split_into_words(neg_word)
+        app.logger.info("word={} neg_words={}".format(words,neg_words))
+        for k,model in g.laws_dict.items():
+            try:
+                r=model.most_similar(positive=words, negative=neg_words,topn=20)
+                rdict[k]=r
+            except KeyError as err:
+                app.logger.error(err)
+                flash("err={}".format(err))
+                return redirect(url_for('search'))
+    return render_template('search.html',form=form,rdict=rdict)
 
 @app.route("/",methods=['GET'])
 def index():

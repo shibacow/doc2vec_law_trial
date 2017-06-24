@@ -12,7 +12,7 @@
     {% endif %}
     {% endwith %}
 
-    <h2 style = "text-align: center;">法令ホーム</h2>
+    <h2 style = "text-align: center;">Doc2Vecテスト(類似カテゴリ、類似法令)</h2>
     {% for message in form.word.errors %}
     <div>{{ message }}</div>
     {% endfor %}
@@ -20,79 +20,11 @@
     {% for message in form.submit.errors %}
     <div>{{ message }}</div>
     {% endfor %}
-
-    <form action = {{url_for('search')}} method = post>
-      <fieldset>
-	<legend>法律ワードインプット</legend>
-	{{ form.hidden_tag() }}
-	<div style = font-size:20px; font-weight:bold; margin-left:150px;>
-	  {{ form.word.label }}<br>
-	  {{ form.word }}<br>
-	  {{ form.neg_word.label }}<br>
-	  {{ form.neg_word }}<br>
-	  {{ form.submit }}
-	</div>
-      </fieldset>
-    </form>
-    {% if rdict: %}
     <div>
-      <p>
-	<ul>
-	<li>laws:</li>
-	<li>動詞、形容詞、名刺</li>
-	<li>min_count=1</li>
-	<li>model = models.Doc2Vec(size=400, alpha=0.0015, sample=1e-4, min_count=1, workers=4)<li>
-	</ul>
-      </p>
-      <p>
-	<ul>
-	<li>laws2:</li>
-	<li>名詞のみ</li>
-	<li>min_count=1?</li>
-	<li>model = models.Doc2Vec(size=400, alpha=0.0015, sample=1e-4, min_count=1, workers=4)</li>
-	</ul>
-      </p>
-      <p>
-	<ul>
-	  <li>laws3:</li>
-	  <li>名詞のみ</li>
-	  <li>min_count=10?</li>
-	  <li>model = models.Doc2Vec(size=400, alpha=0.0015, sample=1e-4, min_count=10, workers=4)</li>
-	</ul>
-      </p>
-      <p>
-	<ul>
-	  <li>laws4:</li>
-	  <li>名詞のみ</li>
-	  <li>min_count=40?</li>
-	  <li>model = models.Doc2Vec(size=400, alpha=0.0015, sample=1e-4, min_count=40, workers=4)</li>
-	</ul>
-      </p>
-      <p>
-	<ul>
-	  <li>laws5:</li>
-	  <li>名詞のみ</li>
-	  <li>min_count=100?</li>
-	  <li>model = models.Doc2Vec(size=400, alpha=0.0015, sample=1e-4, min_count=100, workers=4)</li>
-	</ul>
-      </p>
+      <span>
+	<a href="{{url_for('search') }}">類似単語検索</a>
+      </span>
     </div>
-    <div id="rdict_container">
-    <h2>類似単語</h2>
-    {% for k in rdict %}
-    <div>
-      <h4>{{ k }}</h4>
-      <table>
-	{% for c in rdict[k] %}
-	<tr>
-          <td>{{ c[0] }} </td><td>{{c[1]}}</td>
-	</tr>
-      {% endfor %}
-      </table>
-    </div>
-    {% endfor %}
-    </div>
-    {% endif %}
     <div id="catdict_container">
     <h2>カテゴリの比較</h2>
     {% for k in catdict %}
