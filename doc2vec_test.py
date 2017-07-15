@@ -11,9 +11,9 @@ import re
 import logging
 from pyquery import PyQuery as pq
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-OUTPUT_MODEL = 'model/doc2vec.model.laws6'
+OUTPUT_MODEL = 'model/doc2vec.model.laws1'
 SAMPLING=500
-PASSING_PRECISION = int(0.95*SAMPLING)
+PASSING_PRECISION = int(0.80*SAMPLING)
 from datetime import datetime
 import random
 
@@ -36,8 +36,8 @@ class OneLaw(object):
         self.title=elm['title']
         self.cat=elm['cat']
         strip_body=self.__strip_html(self.body)
-        self.sentence = self.__tokenized(strip_body)
-        #self.sentence = self.__tokenized_wakati(strip_body)
+        #self.sentence = self.__tokenized(strip_body)
+        self.sentence = self.__tokenized_wakati(strip_body)
         #logging.info(self.strip_body)
     def __strip_html(self,body):
         d=pq(body)
@@ -65,7 +65,7 @@ class OneLaw(object):
 
                     
 def train(sentences):
-    model = models.Doc2Vec(size=400, alpha=0.0015, sample=1e-4, min_count=10, workers=8)
+    model = models.Doc2Vec(size=800, alpha=0.0015, sample=1e-4, min_count=0, workers=8)
     model.build_vocab(sentences)
     TOP_NUM=10
     train_log=open('log/train_{}.log'.format(datetime.now().strftime('%Y-%m-%d_%H%M')),'a')
@@ -90,8 +90,8 @@ def train(sentences):
 
 def main():
     mp=connect_mongo()
-    tagger = MeCab.Tagger('-Ochasen')
-    #tagger = MeCab.Tagger('-Owakati')
+    #tagger = MeCab.Tagger('-Ochasen')
+    tagger = MeCab.Tagger('-Owakati')
     sentences=[]
     pipeline=[{"$sample":{"size":300}}]
     #law_base=mp.base.aggregate(pipeline)
