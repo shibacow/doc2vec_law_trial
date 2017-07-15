@@ -14,6 +14,7 @@ logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=lo
 OUTPUT_MODEL = 'model/doc2vec.model.laws7'
 SAMPLING=500
 PASSING_PRECISION = int(0.95*SAMPLING)
+from datetime import datetime
 import random
 
 class MongoOp(object):
@@ -84,6 +85,8 @@ def train(sentences):
     return model
 
 def main():
+    if not os.path.isdir('model'):
+        os.mkdir('model')
     mp=connect_mongo()
     #tagger = MeCab.Tagger('-Ochasen')
     tagger = MeCab.Tagger('-Owakati')
@@ -97,7 +100,6 @@ def main():
             sentences.append(ol.sentence)
     #random.shuffle(sentences)
     model=train(sentences)
-    if not os.path.isdir('model'):
-        os.mkdir('model')
+
     model.save(OUTPUT_MODEL)
 if __name__=='__main__':main()
