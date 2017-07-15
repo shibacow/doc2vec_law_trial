@@ -13,7 +13,7 @@ from pyquery import PyQuery as pq
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 OUTPUT_MODEL = 'model/doc2vec.model.laws7'
 SAMPLING=500
-PASSING_PRECISION = int(0.90*SAMPLING)
+PASSING_PRECISION = int(0.95*SAMPLING)
 import random
 
 class MongoOp(object):
@@ -35,11 +35,20 @@ class OneLaw(object):
         self.title=elm['title']
         self.cat=elm['cat']
         strip_body=self.__strip_html(self.body)
-        self.sentence = self.__tokenized(strip_body)
+        #self.sentence = self.__tokenized(strip_body)
+        self.sentence = self.__tokenized_wakati(strip_body)
         #logging.info(self.strip_body)
     def __strip_html(self,body):
         d=pq(body)
         return d('body').text()
+    def __tokenized_wakati(self,body):
+        ps=self.tagger.parse(body)
+        if not ps:
+            return None
+        words=ps.split(' ')
+        logging.info("count={} name={} word={}".format(self.count,self.title,words[:20]))
+        return TaggedDocument(words=words, tags=[self.cat])
+
     def __tokenized(self,body):
         ps=self.tagger.parse(body)
         if not ps:
@@ -55,31 +64,40 @@ class OneLaw(object):
 
                     
 def train(sentences):
-    model = models.Doc2Vec(size=400, alpha=0.0015, sample=1e-4, min_count=10, workers=4)
+    model = models.Doc2Vec(size=400, alpha=0.0015, sample=1e-4, min_count=10, workers=8)
     model.build_vocab(sentences)
     for x in range(30):
         logging.info("x={}".format(x))
-        model.train(sentences)
+        model.train(sentences,total_examples=model.corpus_count,epochs=model.iter)
         ranks = []
         for doc_id in range(SAMPLING):
             inferred_vector = model.infer_vector(sentences[doc_id].words)
             sims = model.docvecs.most_similar([inferred_vector], topn=len(model.docvecs))
             rank = [docid for docid, sim in sims].index(sentences[doc_id].tags[0])
             ranks.append(rank)
-        logging.info(collections.Counter(ranks))
-        if collections.Counter(ranks)[0] >= PASSING_PRECISION:
+        cnt= collections.Counter(ranks)
+        top5=sum([v for k,v in cnt.items() if k<=5])
+        logging.info(cnt)
+        logging.info("top5={}".format(top5))
+        if top5 >= PASSING_PRECISION:
             break
     return model
 
 def main():
     mp=connect_mongo()
-    tagger = MeCab.Tagger('-Ochasen')
+    #tagger = MeCab.Tagger('-Ochasen')
+    tagger = MeCab.Tagger('-Owakati')
     sentences=[]
-    for i,a in enumerate(mp.base.find()):
+    pipeline=[{"$sample":{"size":300}}]
+    law_base=mp.base.aggregate(pipeline)
+    law_base=mp.base.find()
+    for i,a in enumerate(law_base):
         ol=OneLaw(tagger,a,i)
         if ol.sentence:
             sentences.append(ol.sentence)
     #random.shuffle(sentences)
     model=train(sentences)
+    if not os.path.isdir('model'):
+        os.mkdir('model')
     model.save(OUTPUT_MODEL)
 if __name__=='__main__':main()
