@@ -11,7 +11,7 @@ import re
 import logging
 from pyquery import PyQuery as pq
 logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
-OUTPUT_MODEL = 'model/doc2vec.model.laws7'
+OUTPUT_MODEL = 'model/doc2vec.model.laws6'
 SAMPLING=500
 PASSING_PRECISION = int(0.95*SAMPLING)
 from datetime import datetime
@@ -36,8 +36,8 @@ class OneLaw(object):
         self.title=elm['title']
         self.cat=elm['cat']
         strip_body=self.__strip_html(self.body)
-        #self.sentence = self.__tokenized(strip_body)
-        self.sentence = self.__tokenized_wakati(strip_body)
+        self.sentence = self.__tokenized(strip_body)
+        #self.sentence = self.__tokenized_wakati(strip_body)
         #logging.info(self.strip_body)
     def __strip_html(self,body):
         d=pq(body)
@@ -67,6 +67,8 @@ class OneLaw(object):
 def train(sentences):
     model = models.Doc2Vec(size=400, alpha=0.0015, sample=1e-4, min_count=10, workers=8)
     model.build_vocab(sentences)
+    TOP_NUM=10
+    train_log=open('log/train_{}.log'.format(datetime.now().strftime('%Y-%m-%d_%H%M')),'a')
     for x in range(30):
         logging.info("x={}".format(x))
         model.train(sentences,total_examples=model.corpus_count,epochs=model.iter)
@@ -77,22 +79,22 @@ def train(sentences):
             rank = [docid for docid, sim in sims].index(sentences[doc_id].tags[0])
             ranks.append(rank)
         cnt= collections.Counter(ranks)
-        top5=sum([v for k,v in cnt.items() if k<=5])
-        logging.info(cnt)
-        logging.info("top5={}".format(top5))
-        if top5 >= PASSING_PRECISION:
+        top=sum([v for k,v in cnt.items() if k<=TOP_NUM])
+        logging.info("cnt={} top{}={} cnt={}".format(x,TOP_NUM,top,cnt))
+        train_log.write("cnt={} top{}={} cnt={}\n".format(x,TOP_NUM,top,cnt))
+        train_log.flush()
+        if top >= PASSING_PRECISION:
             break
+    train_log.close()
     return model
 
 def main():
-    if not os.path.isdir('model'):
-        os.mkdir('model')
     mp=connect_mongo()
-    #tagger = MeCab.Tagger('-Ochasen')
-    tagger = MeCab.Tagger('-Owakati')
+    tagger = MeCab.Tagger('-Ochasen')
+    #tagger = MeCab.Tagger('-Owakati')
     sentences=[]
     pipeline=[{"$sample":{"size":300}}]
-    law_base=mp.base.aggregate(pipeline)
+    #law_base=mp.base.aggregate(pipeline)
     law_base=mp.base.find()
     for i,a in enumerate(law_base):
         ol=OneLaw(tagger,a,i)
@@ -100,6 +102,5 @@ def main():
             sentences.append(ol.sentence)
     #random.shuffle(sentences)
     model=train(sentences)
-
     model.save(OUTPUT_MODEL)
 if __name__=='__main__':main()
